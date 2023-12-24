@@ -1,39 +1,68 @@
 applications_dataset:
-  type: pandas.CSVDataset
-  filepath: data/01_raw/applications_raw.csv
+  type: pandas.ParquetDataset
+  filepath: data/01_raw/applications_raw.parquet
 
 bureau_dataset:
-  type: pandas.CSVDataset
-  filepath: data/01_raw/bureau_raw.csv
+  type: pandas.ParquetDataset
+  filepath: data/01_raw/bureau_raw.parquet
+  load_args:
+    engine: pyarrow
+    columns: [
+      "SK_ID_CURR", 
+      "DAYS_CREDIT", 
+      "AMT_CREDIT_SUM_DEBT", 
+      "CREDIT_DAY_OVERDUE"
+    ]
 
 credit_card_balance_dataset:
-  type: pandas.CSVDataset
-  filepath: data/01_raw/credit_card_balance_raw.csv
+  type: pandas.ParquetDataset
+  filepath: data/01_raw/credit_card_balance_raw.parquet
+  load_args:
+    engine: pyarrow
+    columns: [
+      "SK_ID_CURR", 
+      "AMT_BALANCE", 
+      "AMT_CREDIT_LIMIT_ACTUAL", 
+      "AMT_DRAWINGS_ATM_CURRENT",
+    ]
 
 installments_payments_dataset:
-  type: pandas.CSVDataset
-  filepath: data/01_raw/installments_payments_raw.csv
+  type: pandas.ParquetDataset
+  filepath: data/01_raw/installments_payments_raw.parquet
+  load_args:
+    engine: pyarrow
+    columns: ["SK_ID_CURR", "AMT_PAYMENT"]
 
 pos_cash_balance_dataset:
-  type: pandas.CSVDataset
-  filepath: data/01_raw/pos_cash_balance_raw.csv
+  type: pandas.ParquetDataset
+  filepath: data/01_raw/pos_cash_balance_raw.parquet
+  load_args:
+    engine: pyarrow
+    columns: ["SK_ID_CURR", "CNT_INSTALMENT_FUTURE", "SK_DPD"]
 
 previous_applications_dataset:
-  type: pandas.CSVDataset
-  filepath: data/01_raw/previous_applications_raw.csv
+  type: pandas.ParquetDataset
+  filepath: data/01_raw/previous_applications_raw.parquet
+  load_args:
+    engine: pyarrow
+    columns: [
+        "SK_ID_CURR",
+        "AMT_APPLICATION",
+        "AMT_CREDIT",
+    ]
 
 applications_train:
-  type: pandas.CSVDataset
-  filepath: data/02_intermediate/applications_train.csv
+  type: pandas.ParquetDataset
+  filepath: data/02_intermediate/applications_train.parquet
 
 applications_test:
-  type: pandas.CSVDataset
-  filepath: data/02_intermediate/applications_test.csv
+  type: pandas.ParquetDataset
+  filepath: data/02_intermediate/applications_test.parquet
 
 applications_aggregate_train:
-  type: pandas.CSVDataset
-  filepath: data/02_primary/applications_aggregate_train.csv
+  type: pandas.ParquetDataset
+  filepath: data/02_primary/applications_aggregate_train.parquet
 
 applications_aggregate_test:
-  type: pandas.CSVDataset
-  filepath: data/02_primary/applications_aggregate_test.csv
+  type: pandas.ParquetDataset
+  filepath: data/02_primary/applications_aggregate_test.parquet
