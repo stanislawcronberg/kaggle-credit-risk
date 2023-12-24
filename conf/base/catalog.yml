@@ -1,0 +1,39 @@
+applications_dataset:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/applications_raw.csv
+
+bureau_dataset:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/bureau_raw.csv
+
+credit_card_balance_dataset:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/credit_card_balance_raw.csv
+
+installments_payments_dataset:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/installments_payments_raw.csv
+
+pos_cash_balance_dataset:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/pos_cash_balance_raw.csv
+
+previous_applications_dataset:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/previous_applications_raw.csv
+
+applications_train:
+  type: pandas.CSVDataset
+  filepath: data/02_intermediate/applications_train.csv
+
+applications_test:
+  type: pandas.CSVDataset
+  filepath: data/02_intermediate/applications_test.csv
+
+applications_aggregate_train:
+  type: pandas.CSVDataset
+  filepath: data/02_primary/applications_aggregate_train.csv
+
+applications_aggregate_test:
+  type: pandas.CSVDataset
+  filepath: data/02_primary/applications_aggregate_test.csv
