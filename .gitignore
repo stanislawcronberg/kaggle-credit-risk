@@ -17,6 +17,9 @@ data/**
 # also keep all .gitkeep files
 !.gitkeep
 
+# remove session/pipeline local run logs
+session_store.db
+stats.json
 
 ##########################
 # Common files
