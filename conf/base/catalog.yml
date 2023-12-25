@@ -1,7 +1,17 @@
+# The core dataset with all the raw application data
+# This is later split into train and test
 applications_dataset:
   type: pandas.ParquetDataset
   filepath: data/01_raw/applications_raw.parquet
 
+# All other datasets in the 01_raw folder are used to create
+# additional features for the applications dataset
+#
+# These are the bureau, credit_card_balance, installments_payments,
+# pos_cash_balance, and previous_applications datasets
+#
+# For each of these we only load a subset of the columns needed in
+# order to create the aggregate features
 bureau_dataset:
   type: pandas.ParquetDataset
   filepath: data/01_raw/bureau_raw.parquet
@@ -51,18 +61,44 @@ previous_applications_dataset:
         "AMT_CREDIT",
     ]
 
+# The raw application training data, no feature engineering
+# only the raw data from the applications dataset
 applications_train:
   type: pandas.ParquetDataset
   filepath: data/02_intermediate/applications_train.parquet
 
+# The raw application test data, no feature engineering
+# only the raw data from the applications dataset
 applications_test:
   type: pandas.ParquetDataset
   filepath: data/02_intermediate/applications_test.parquet
 
+# The train applications data with additional features created
+# from the additional data sources (bureau, credit_card_balance, etc)
 applications_aggregate_train:
   type: pandas.ParquetDataset
   filepath: data/03_primary/applications_aggregate_train.parquet
 
+# The test applications data with additional features created
+# from the additional data sources (bureau, credit_card_balance, etc)
 applications_aggregate_test:
   type: pandas.ParquetDataset
   filepath: data/03_primary/applications_aggregate_test.parquet
+
+# The bucketing process object from skorecard to perform bucketing
+# on the categorical and numerical features
+bucketing_process:
+  type: pickle.PickleDataset
+  filepath: data/06_models/bucketing_process.pkl
+
+# The train applications with the bucketing process applied
+# before the WoE transformation is applied
+applications_bucketed_train:
+  type: pandas.ParquetDataset
+  filepath: data/04_primary/applications_bucketed_train.parquet
+
+# The test applications with the bucketing process applied
+# before the WoE transformation is applied
+applications_bucketed_test:
+  type: pandas.ParquetDataset
+  filepath: data/04_primary/applications_bucketed_train.parquet
