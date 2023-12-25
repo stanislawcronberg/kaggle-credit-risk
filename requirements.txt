@@ -15,3 +15,4 @@ seaborn~=0.12.1
 pyarrow~=14.0.2
 tqdm~=4.62.3
 pre-commit
+skorecard~=1.6.8
