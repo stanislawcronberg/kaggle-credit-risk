@@ -8,9 +8,9 @@ bureau_dataset:
   load_args:
     engine: pyarrow
     columns: [
-      "SK_ID_CURR", 
-      "DAYS_CREDIT", 
-      "AMT_CREDIT_SUM_DEBT", 
+      "SK_ID_CURR",
+      "DAYS_CREDIT",
+      "AMT_CREDIT_SUM_DEBT",
       "CREDIT_DAY_OVERDUE"
     ]
 
@@ -20,9 +20,9 @@ credit_card_balance_dataset:
   load_args:
     engine: pyarrow
     columns: [
-      "SK_ID_CURR", 
-      "AMT_BALANCE", 
-      "AMT_CREDIT_LIMIT_ACTUAL", 
+      "SK_ID_CURR",
+      "AMT_BALANCE",
+      "AMT_CREDIT_LIMIT_ACTUAL",
       "AMT_DRAWINGS_ATM_CURRENT",
     ]
 
@@ -61,8 +61,8 @@ applications_test:
 
 applications_aggregate_train:
   type: pandas.ParquetDataset
-  filepath: data/02_primary/applications_aggregate_train.parquet
+  filepath: data/03_primary/applications_aggregate_train.parquet
 
 applications_aggregate_test:
   type: pandas.ParquetDataset
-  filepath: data/02_primary/applications_aggregate_test.parquet
+  filepath: data/03_primary/applications_aggregate_test.parquet
