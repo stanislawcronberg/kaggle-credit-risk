@@ -1,5 +1,8 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.pipeline import make_pipeline
+from skorecard.bucketers import DecisionTreeBucketer, OptimalBucketer, OrdinalCategoricalBucketer
+from skorecard.pipeline import BucketingProcess
 
 from kedro_credit_risk.pipelines.data_processing.aggregations import (
     _aggregate_features_bureau,
@@ -91,4 +94,50 @@ def aggregate_feature_engineering(  # noqa: PLR0913
     applications_agg_train = applications_agg_train.merge(previous_app_agg_train, on="SK_ID_CURR", how="left")
     applications_agg_test = applications_agg_test.merge(previous_app_agg_test, on="SK_ID_CURR", how="left")
 
+    # Drop the ID column from train/test
+    applications_agg_train = applications_agg_train.drop(columns="SK_ID_CURR")
+    applications_agg_test = applications_agg_test.drop(columns="SK_ID_CURR")
+
     return applications_agg_train, applications_agg_test
+
+
+def fit_bucketing_pipeline(
+    applications_df: pd.DataFrame,
+    target_column_name: str,
+) -> pd.DataFrame:
+    # TODO: Set the bucketing process parameters in the config files
+    features, target = applications_df.drop(columns=target_column_name), applications_df[target_column_name]
+
+    numerical_cols = features.select_dtypes(include=["int64", "float64"]).columns.tolist()
+    categorical_cols = features.select_dtypes(include=["object", "category"]).columns.tolist()
+
+    prebucketing_pipeline = make_pipeline(
+        DecisionTreeBucketer(variables=numerical_cols, max_n_bins=40, min_bin_size=0.02),
+        OrdinalCategoricalBucketer(variables=categorical_cols, tol=0.02),
+    )
+
+    bucketing_pipeline = make_pipeline(
+        OptimalBucketer(variables=numerical_cols, max_n_bins=5, min_bin_size=0.05),
+        OptimalBucketer(variables=categorical_cols, variables_type="categorical", max_n_bins=5, min_bin_size=0.05),
+    )
+
+    bucketing_process = BucketingProcess(
+        prebucketing_pipeline=prebucketing_pipeline,
+        bucketing_pipeline=bucketing_pipeline,
+    )
+
+    bucketing_process = bucketing_process.fit(features, target)
+
+    return bucketing_process
+
+
+def transform_with_bucketing_process(
+    train_df: pd.DataFrame,
+    test_df: pd.DataFrame,
+    bucketing_process: BucketingProcess,
+    target_col_name: str,
+) -> pd.DataFrame:
+    # TODO: Fix and store features, target separate in the data catalogs
+    train_bucketed_df = bucketing_process.transform(train_df.drop(columns=target_col_name))
+    test_bucketed_df = bucketing_process.transform(test_df.drop(columns=target_col_name))
+    return train_bucketed_df, test_bucketed_df
