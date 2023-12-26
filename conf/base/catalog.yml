@@ -93,12 +93,38 @@ bucketing_process:
 
 # The train applications with the bucketing process applied
 # before the WoE transformation is applied
-applications_bucketed_train:
+x_train_bins:
   type: pandas.ParquetDataset
-  filepath: data/04_primary/applications_bucketed_train.parquet
+  filepath: data/03_primary/applications_bucketed_train.parquet
 
 # The test applications with the bucketing process applied
 # before the WoE transformation is applied
-applications_bucketed_test:
+x_test_bins:
   type: pandas.ParquetDataset
-  filepath: data/04_primary/applications_bucketed_train.parquet
+  filepath: data/03_primary/applications_bucketed_test.parquet
+
+y_train:
+  type: pandas.ParquetDataset
+  filepath: data/03_primary/y_train.parquet
+
+y_test:
+  type: pandas.ParquetDataset
+  filepath: data/03_primary/y_test.parquet
+
+# Output summary table of the bucketing info for each feature
+# with their IV and WoE values
+bucketing_summary:
+  type: pandas.ParquetDataset
+  filepath: data/08_reporting/bucketing_summary.parquet
+
+x_train_bins_filtered:
+  type: pandas.ParquetDataset
+  filepath: data/04_feature/x_train_bins_filtered.parquet
+
+x_test_bins_filtered:
+  type: pandas.ParquetDataset
+  filepath: data/04_feature/x_test_bins_filtered.parquet
+
+woe_encoder:
+  type: pickle.PickleDataset
+  filepath: data/06_models/woe_encoder.pkl
