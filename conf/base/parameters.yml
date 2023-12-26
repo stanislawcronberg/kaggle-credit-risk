@@ -1,3 +1,5 @@
 test_size: 0.2
 random_state: 42
 target_column_name: "TARGET"
+iv_threshold: 0.05
+sample_size: 0.05

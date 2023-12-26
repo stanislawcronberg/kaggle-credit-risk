@@ -1,8 +1,11 @@
+import logging
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
 from skorecard.bucketers import DecisionTreeBucketer, OptimalBucketer, OrdinalCategoricalBucketer
 from skorecard.pipeline import BucketingProcess
+from skorecard.preprocessing import WoeEncoder
 
 from kedro_credit_risk.pipelines.data_processing.aggregations import (
     _aggregate_features_bureau,
@@ -12,12 +15,15 @@ from kedro_credit_risk.pipelines.data_processing.aggregations import (
     _aggregate_previous_applications,
 )
 
+logger = logging.getLogger(__name__)
+
 
 def split_data(
     applications_df: pd.DataFrame,
     test_size: float,
     random_state: int,
     target_column_name: str,
+    sample_size: float | None,
 ) -> pd.DataFrame:
     """Split the raw application data into training and test sets.
 
@@ -26,10 +32,15 @@ def split_data(
         test_size: The proportion of the data to be used as the test set.
         random_state: The random state to use for reproducibility.
         target_column_name: The name of the target column.
+        sample_size: The fraction of the data to sample.
 
     Returns:
         The training and test application data.
     """
+
+    if sample_size is not None:
+        applications_df = applications_df.sample(frac=sample_size, random_state=random_state)
+
     train, test = train_test_split(
         applications_df,
         test_size=test_size,
@@ -136,8 +147,54 @@ def transform_with_bucketing_process(
     test_df: pd.DataFrame,
     bucketing_process: BucketingProcess,
     target_col_name: str,
-) -> pd.DataFrame:
-    # TODO: Fix and store features, target separate in the data catalogs
-    train_bucketed_df = bucketing_process.transform(train_df.drop(columns=target_col_name))
-    test_bucketed_df = bucketing_process.transform(test_df.drop(columns=target_col_name))
-    return train_bucketed_df, test_bucketed_df
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+    x_train_bins = bucketing_process.transform(train_df.drop(columns=target_col_name))
+    x_test_bins = bucketing_process.transform(test_df.drop(columns=target_col_name))
+    y_train = train_df[[target_col_name]]
+    y_test = test_df[[target_col_name]]
+    logger.debug(f"x_train_bins shape: {x_train_bins.shape}")
+    logger.debug(f"x_test_bins  shape: {x_test_bins.shape}")
+    logger.debug(f"y_train shape: {y_train.shape}")
+    logger.debug(f"y_test  shape: {y_test.shape}")
+    return x_train_bins, x_test_bins, y_train, y_test
+
+
+def extract_bucket_process_summary(bucketing_process: BucketingProcess) -> pd.DataFrame:
+    bucket_summary = bucketing_process.summary()
+    return bucket_summary
+
+
+def filter_application_data(
+    x_train: pd.DataFrame,
+    x_test: pd.DataFrame,
+    bucket_summary: pd.DataFrame,
+    iv_threshold: float,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    selected_features = bucket_summary[bucket_summary["IV_score"] > iv_threshold]["column"].tolist()
+    x_train = x_train[selected_features]
+    x_test = x_test[selected_features]
+    logger.info(f"Selected {len(selected_features)} features with IV score > {iv_threshold}")
+    logger.debug(f"x_train shape: {x_train.shape}")
+    logger.debug(f"x_test  shape: {x_test.shape}")
+    return x_train, x_test
+
+
+def fit_woe_encoder(
+    x_train_bins: pd.DataFrame,
+    y_train: pd.DataFrame,
+) -> WoeEncoder:
+    logger.debug(f"x_train_bins shape: {x_train_bins.shape}")
+    logger.debug(f"y_train shape: {y_train.shape}")
+    encoder = WoeEncoder()
+    encoder.fit(x_train_bins, y_train)
+    return encoder
+
+
+def transform_with_woe_encoder(
+    x_train_bins: pd.DataFrame,
+    x_test_bins: pd.DataFrame,
+    encoder: WoeEncoder,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    x_train_woe = encoder.transform(x_train_bins)
+    x_test_woe = encoder.transform(x_test_bins)
+    return x_train_woe, x_test_woe
