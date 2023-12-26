@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "kedro_credit_risk"
@@ -12,26 +12,39 @@ kedro-credit-risk = "kedro_credit_risk.__main__:main"
 
 [project.entry-points."kedro.hooks"]
 
-[project.optional-dependencies]
-docs = [
-    "docutils<0.18.0",
-    "sphinx~=3.4.3",
-    "sphinx_rtd_theme==0.5.1",
-    "nbsphinx==0.8.1",
-    "sphinx-autodoc-typehints==1.11.1",
-    "sphinx_copybutton==0.3.1",
-    "ipykernel>=5.3, <7.0",
-    "Jinja2<3.1.0",
-    "myst-parser~=0.17.2",
-]
+[tool.poetry]
+name = "kedro_credit_risk"
+version = "0.1.0"  # Adjust your version here
+description = "Credit Risk Model with Kedro"
+authors = ["Stanislaw Cronberg"]
+readme = "README.md"
 
-[tool.setuptools.dynamic]
-dependencies = {file = "requirements.txt"}
-version = {attr = "kedro_credit_risk.__version__"}
+[tool.poetry.dependencies]
+python = "~3.11"
+kedro = "~0.19.1"
+scikit-learn = ">=1.3.0"
+seaborn = "~0.12.1"
+pyarrow = "~14.0.2"
+tqdm = "~4.62.3"
+skorecard = "~1.6.8"
+jupyterlab = ">=3.0"
+kedro-viz = "^7.0.0"
+kedro-datasets = "^2.0.0"
 
-[tool.setuptools.packages.find]
-where = ["src"]
-namespaces = false
+[tool.poetry.extras]
+docs = ["docutils", "sphinx", "sphinx_rtd_theme", "nbsphinx", "sphinx-autodoc-typehints", "sphinx_copybutton", "ipykernel", "Jinja2", "myst-parser"]
+
+[tool.poetry.dev-dependencies]
+black = ">=22.0"
+ipython = ">=8.10"
+pytest = "~7.2"
+pytest-cov = "~3.0"
+pytest-mock = ">=1.7.1,<2.0"
+ruff = "~0.0.290"
+pre-commit = "*"
+
+[tool.poetry.scripts]
+kedro-credit-risk = "kedro_credit_risk.__main__:main"
 
 [tool.kedro]
 package_name = "kedro_credit_risk"
@@ -39,15 +52,15 @@ project_name = "kedro-credit-risk"
 kedro_init_version = "0.19.1"
 tools = "['Linting', 'Testing', 'Custom Logging', 'Documentation', 'Data Structure', 'Kedro Viz']"
 
-[tool.pytest.ini_options]
-addopts = """
---cov-report term-missing \
---cov src/kedro_credit_risk -ra"""
-
 [tool.coverage.report]
 fail_under = 0
 show_missing = true
 exclude_lines = ["pragma: no cover", "raise NotImplementedError"]
+
+[tool.pytest.ini_options]
+addopts = """
+--cov-report term-missing \
+--cov src/kedro_credit_risk -ra"""
 
 [tool.ruff]
 line-length = 120
