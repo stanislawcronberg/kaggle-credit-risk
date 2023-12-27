@@ -229,11 +229,10 @@ def train_skorecard_model(
 
 def filter_skorecard_features(scorecard: Skorecard, p_value_threshold: float) -> list[str]:
     stats = scorecard.get_stats()
-    logger.info(stats)
     feature_list = [feature for feature in stats.index.tolist() if feature != "const"]
-    logger.info(f"Stats: {stats}")
     features_to_remove = stats[(stats["P>|z|"] > p_value_threshold)].index.tolist()
     new_features = [feat for feat in feature_list if feat not in features_to_remove]
+    logger.info(stats)
     logger.info(f"Features to remove: {features_to_remove}")
     logger.info(f"Remaining features: {new_features}")
     return new_features
