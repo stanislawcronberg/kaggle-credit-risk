@@ -6,6 +6,7 @@ from .nodes import (
     filter_application_data,
     fit_bucketing_pipeline,
     fit_woe_encoder,
+    remove_correlated_features,
     split_data,
     transform_with_bucketing_process,
     transform_with_woe_encoder,
@@ -89,6 +90,12 @@ def create_pipeline(**kwargs) -> Pipeline:
                 inputs=["x_train_bins_filtered", "x_test_bins_filtered", "woe_encoder"],
                 outputs=["x_train_woe", "x_test_woe"],
                 name="transform_with_woe_encoder_node",
+            ),
+            node(
+                func=remove_correlated_features,
+                inputs=["x_train_woe", "params:corr_limit"],
+                outputs=["x_train_woe_uncorrelated", "low_corr_features"],
+                name="remove_correlated_features_node",
             ),
         ]
     )
