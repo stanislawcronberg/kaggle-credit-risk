@@ -208,6 +208,16 @@ def remove_correlated_features(
     df: pd.DataFrame,
     corr_limit: float,
 ) -> tuple[pd.DataFrame, list[str]]:
+    """
+    Removes features that are highly correlated with each other from the dataset.
+
+    Args:
+        df: The dataset.
+        corr_limit: The threshold for correlation.
+
+    Returns:
+        The filtered dataset and the list of selected features.
+    """
     logging.info(f"Correlation threshold set to {corr_limit}")
     corr_matrix = compute_corr_matrix(df)
     low_corr_features = select_uncorrelated_features(corr_matrix, corr_limit)
@@ -222,12 +232,34 @@ def train_skorecard_model(
     bucketing_process: BucketingProcess,
     selected_features: list[str],
 ) -> Skorecard:
+    """
+    Trains the Skorecard model.
+
+    Args:
+        x_train: The training data.
+        y_train: The training target.
+        bucketing_process: The bucketing process.
+        selected_features: The list of selected features.
+
+    Returns:
+        The trained Skorecard model.
+    """
     scorecard = Skorecard(bucketing=bucketing_process, variables=selected_features, calculate_stats=True)
     scorecard.fit(x_train, y_train)
     return scorecard
 
 
 def filter_skorecard_features(scorecard: Skorecard, p_value_threshold: float) -> list[str]:
+    """
+    Filter out features that are not statistically significant.
+
+    Args:
+        scorecard: The trained scorecard model.
+        p_value_threshold: The threshold for p-value. Features with a p-value above this limit will be filtered out.
+
+    Returns:
+        The list of filtered feature names.
+    """
     stats = scorecard.get_stats()
     feature_list = [feature for feature in stats.index.tolist() if feature != "const"]
     features_to_remove = stats[(stats["P>|z|"] > p_value_threshold)].index.tolist()
