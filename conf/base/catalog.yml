@@ -136,3 +136,15 @@ low_corr_features:  # list of strings
 x_train_woe_uncorrelated:
   type: pandas.ParquetDataset
   filepath: data/05_model_input/x_train_woe_uncorrelated.parquet
+
+skorecard_model_initial:
+  type: pickle.PickleDataset
+  filepath: data/06_models/skorecard_model_initial.pkl
+
+skorecard_filtered_features:
+  type: pickle.PickleDataset
+  filepath: data/06_models/skorecard_filtered_features.pkl
+
+skorecard_model_final:
+  type: pickle.PickleDataset
+  filepath: data/06_models/skorecard_model_final.pkl
