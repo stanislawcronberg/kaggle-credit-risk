@@ -4,10 +4,12 @@ from .nodes import (
     aggregate_feature_engineering,
     extract_bucket_process_summary,
     filter_application_data,
+    filter_skorecard_features,
     fit_bucketing_pipeline,
     fit_woe_encoder,
     remove_correlated_features,
     split_data,
+    train_skorecard_model,
     transform_with_bucketing_process,
     transform_with_woe_encoder,
 )
@@ -39,14 +41,14 @@ def create_pipeline(**kwargs) -> Pipeline:
                     "pos_cash_balance_dataset",
                     "previous_applications_dataset",
                 ],
-                outputs=["applications_aggregate_train", "applications_aggregate_test"],
+                outputs=["x_train_aggregate", "x_test_aggregate", "y_train", "y_test"],
                 name="aggregate_feature_engineering_node",
             ),
             node(
                 func=fit_bucketing_pipeline,
                 inputs=[
-                    "applications_aggregate_train",
-                    "params:target_column_name",
+                    "x_train_aggregate",
+                    "y_train",
                 ],
                 outputs="bucketing_process",
                 name="fit_bucketing_pipeline_node",
@@ -54,12 +56,11 @@ def create_pipeline(**kwargs) -> Pipeline:
             node(
                 func=transform_with_bucketing_process,
                 inputs=[
-                    "applications_aggregate_train",
-                    "applications_aggregate_test",
+                    "x_train_aggregate",
+                    "x_test_aggregate",
                     "bucketing_process",
-                    "params:target_column_name",
                 ],
-                outputs=["x_train_bins", "x_test_bins", "y_train", "y_test"],
+                outputs=["x_train_bins", "x_test_bins"],
                 name="transform_with_bucketing_process_node",
             ),
             node(
@@ -96,6 +97,24 @@ def create_pipeline(**kwargs) -> Pipeline:
                 inputs=["x_train_woe", "params:corr_limit"],
                 outputs=["x_train_woe_uncorrelated", "low_corr_features"],
                 name="remove_correlated_features_node",
+            ),
+            node(
+                func=train_skorecard_model,
+                inputs=["x_train_aggregate", "y_train", "bucketing_process", "low_corr_features"],
+                outputs="skorecard_model_initial",
+                name="train_scorecard_model_node",
+            ),
+            node(
+                func=filter_skorecard_features,
+                inputs=["skorecard_model_initial", "params:p_value_threshold"],
+                outputs="skorecard_filtered_features",
+                name="evaluate_and_filter_features_node",
+            ),
+            node(
+                func=train_skorecard_model,
+                inputs=["x_train_aggregate", "y_train", "bucketing_process", "skorecard_filtered_features"],
+                outputs="scorecard_model_final",
+                name="train_scorecard_model_final_node",
             ),
         ]
     )
