@@ -3,6 +3,7 @@ import logging
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
+from skorecard import Skorecard
 from skorecard.bucketers import DecisionTreeBucketer, OptimalBucketer, OrdinalCategoricalBucketer
 from skorecard.pipeline import BucketingProcess
 from skorecard.preprocessing import WoeEncoder
@@ -25,7 +26,7 @@ def split_data(
     random_state: int,
     target_column_name: str,
     sample_size: float | None,
-) -> pd.DataFrame:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Split the raw application data into training and test sets.
 
     Args:
@@ -59,7 +60,7 @@ def aggregate_feature_engineering(  # noqa: PLR0913
     installments_payments_dataset: pd.DataFrame,
     pos_cash_balance_dataset: pd.DataFrame,
     previous_applications_dataset: pd.DataFrame,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
     """
     Aggregate the features from the other datasets into the training and test data.
 
@@ -107,21 +108,28 @@ def aggregate_feature_engineering(  # noqa: PLR0913
     applications_agg_test = applications_agg_test.merge(previous_app_agg_test, on="SK_ID_CURR", how="left")
 
     # Drop the ID column from train/test
-    applications_agg_train = applications_agg_train.drop(columns="SK_ID_CURR")
-    applications_agg_test = applications_agg_test.drop(columns="SK_ID_CURR")
+    x_train_aggregate = applications_agg_train.drop(columns="SK_ID_CURR")
+    x_test_aggregate = applications_agg_test.drop(columns="SK_ID_CURR")
 
-    return applications_agg_train, applications_agg_test
+    y_train = x_train_aggregate[["TARGET"]]
+    y_test = x_test_aggregate[["TARGET"]]
+
+    logger.info(f"x_train_aggregate shape: {x_train_aggregate.shape}")
+    logger.info(f"x_test_aggregate  shape: {x_test_aggregate.shape}")
+    logger.info(f"y_train shape: {y_train.shape}")
+    logger.info(f"y_test  shape: {y_test.shape}")
+
+    return x_train_aggregate, x_test_aggregate, y_train, y_test
 
 
 def fit_bucketing_pipeline(
-    applications_df: pd.DataFrame,
-    target_column_name: str,
+    x_train: pd.DataFrame,
+    y_train: str,
 ) -> pd.DataFrame:
     # TODO: Set the bucketing process parameters in the config files
-    features, target = applications_df.drop(columns=target_column_name), applications_df[target_column_name]
 
-    numerical_cols = features.select_dtypes(include=["int64", "float64"]).columns.tolist()
-    categorical_cols = features.select_dtypes(include=["object", "category"]).columns.tolist()
+    numerical_cols = x_train.select_dtypes(include=["int64", "float64"]).columns.tolist()
+    categorical_cols = x_train.select_dtypes(include=["object", "category"]).columns.tolist()
 
     prebucketing_pipeline = make_pipeline(
         DecisionTreeBucketer(variables=numerical_cols, max_n_bins=40, min_bin_size=0.02),
@@ -138,26 +146,21 @@ def fit_bucketing_pipeline(
         bucketing_pipeline=bucketing_pipeline,
     )
 
-    bucketing_process = bucketing_process.fit(features, target)
+    bucketing_process = bucketing_process.fit(x_train, y_train.squeeze())
 
     return bucketing_process
 
 
 def transform_with_bucketing_process(
-    train_df: pd.DataFrame,
-    test_df: pd.DataFrame,
+    x_train: pd.DataFrame,
+    x_test: pd.DataFrame,
     bucketing_process: BucketingProcess,
-    target_col_name: str,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
-    x_train_bins = bucketing_process.transform(train_df.drop(columns=target_col_name))
-    x_test_bins = bucketing_process.transform(test_df.drop(columns=target_col_name))
-    y_train = train_df[[target_col_name]]
-    y_test = test_df[[target_col_name]]
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    x_train_bins = bucketing_process.transform(x_train)
+    x_test_bins = bucketing_process.transform(x_test)
     logger.debug(f"x_train_bins shape: {x_train_bins.shape}")
     logger.debug(f"x_test_bins  shape: {x_test_bins.shape}")
-    logger.debug(f"y_train shape: {y_train.shape}")
-    logger.debug(f"y_test  shape: {y_test.shape}")
-    return x_train_bins, x_test_bins, y_train, y_test
+    return x_train_bins, x_test_bins
 
 
 def extract_bucket_process_summary(bucketing_process: BucketingProcess) -> pd.DataFrame:
@@ -208,4 +211,29 @@ def remove_correlated_features(
     logging.info(f"Correlation threshold set to {corr_limit}")
     corr_matrix = compute_corr_matrix(df)
     low_corr_features = select_uncorrelated_features(corr_matrix, corr_limit)
+    logger.info(f"Initial features:\n{df.columns.tolist()}")
+    logger.info(f"Final features:\n{low_corr_features}")
     return df[low_corr_features], low_corr_features
+
+
+def train_skorecard_model(
+    x_train: pd.DataFrame,
+    y_train: pd.Series,
+    bucketing_process: BucketingProcess,
+    selected_features: list[str],
+) -> Skorecard:
+    scorecard = Skorecard(bucketing=bucketing_process, variables=selected_features, calculate_stats=True)
+    scorecard.fit(x_train, y_train)
+    return scorecard
+
+
+def filter_skorecard_features(scorecard: Skorecard, p_value_threshold: float) -> list[str]:
+    stats = scorecard.get_stats()
+    logger.info(stats)
+    feature_list = [feature for feature in stats.index.tolist() if feature != "const"]
+    logger.info(f"Stats: {stats}")
+    features_to_remove = stats[(stats["P>|z|"] > p_value_threshold)].index.tolist()
+    new_features = [feat for feat in feature_list if feat not in features_to_remove]
+    logger.info(f"Features to remove: {features_to_remove}")
+    logger.info(f"Remaining features: {new_features}")
+    return new_features
