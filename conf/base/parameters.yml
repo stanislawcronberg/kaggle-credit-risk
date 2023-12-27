@@ -4,3 +4,4 @@ target_column_name: "TARGET"
 iv_threshold: 0.05
 sample_size: 0.05
 corr_limit: 0.6
+p_value_threshold: 0.05
