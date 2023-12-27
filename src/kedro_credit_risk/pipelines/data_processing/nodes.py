@@ -14,6 +14,7 @@ from kedro_credit_risk.pipelines.data_processing.aggregations import (
     _aggregate_pos_cash,
     _aggregate_previous_applications,
 )
+from kedro_credit_risk.pipelines.data_processing.correlation import compute_corr_matrix, select_uncorrelated_features
 
 logger = logging.getLogger(__name__)
 
@@ -198,3 +199,13 @@ def transform_with_woe_encoder(
     x_train_woe = encoder.transform(x_train_bins)
     x_test_woe = encoder.transform(x_test_bins)
     return x_train_woe, x_test_woe
+
+
+def remove_correlated_features(
+    df: pd.DataFrame,
+    corr_limit: float,
+) -> tuple[pd.DataFrame, list[str]]:
+    logging.info(f"Correlation threshold set to {corr_limit}")
+    corr_matrix = compute_corr_matrix(df)
+    low_corr_features = select_uncorrelated_features(corr_matrix, corr_limit)
+    return df[low_corr_features], low_corr_features

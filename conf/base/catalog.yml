@@ -128,3 +128,11 @@ x_test_bins_filtered:
 woe_encoder:
   type: pickle.PickleDataset
   filepath: data/06_models/woe_encoder.pkl
+
+low_corr_features:  # list of strings
+  type: pickle.PickleDataset
+  filepath: data/06_models/low_corr_features.pkl
+
+x_train_woe_uncorrelated:
+  type: pandas.ParquetDataset
+  filepath: data/05_model_input/x_train_woe_uncorrelated.parquet
