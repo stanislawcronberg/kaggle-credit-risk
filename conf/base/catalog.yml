@@ -148,3 +148,7 @@ skorecard_filtered_features:
 skorecard_model_final:
   type: pickle.PickleDataset
   filepath: data/06_models/skorecard_model_final.pkl
+
+evaluation_metrics:
+  type: pandas.CSVDataset
+  filepath: data/08_reporting/evaluation_metrics.csv
