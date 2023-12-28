@@ -2,6 +2,7 @@ from kedro.pipeline import Pipeline, node
 
 from .nodes import (
     aggregate_feature_engineering,
+    evaluate_model,
     extract_bucket_process_summary,
     filter_application_data,
     filter_skorecard_features,
@@ -113,8 +114,20 @@ def create_pipeline(**kwargs) -> Pipeline:
             node(
                 func=train_skorecard_model,
                 inputs=["x_train_aggregate", "y_train", "bucketing_process", "skorecard_filtered_features"],
-                outputs="scorecard_model_final",
-                name="train_scorecard_model_final_node",
+                outputs="skorecard_model_final",
+                name="train_skorecard_model_final_node",
+            ),
+            node(
+                func=evaluate_model,
+                inputs=[
+                    "skorecard_model_final",
+                    "x_train_aggregate",
+                    "y_train",
+                    "x_test_aggregate",
+                    "y_test",
+                ],
+                outputs="evaluation_metrics",
+                name="evaluate_model_node",
             ),
         ]
     )

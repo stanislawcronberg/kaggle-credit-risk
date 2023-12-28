@@ -1,6 +1,7 @@
 import logging
 
 import pandas as pd
+from sklearn.metrics import classification_report, roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
 from skorecard import Skorecard
@@ -268,3 +269,48 @@ def filter_skorecard_features(scorecard: Skorecard, p_value_threshold: float) ->
     logger.info(f"Features to remove: {features_to_remove}")
     logger.info(f"Remaining features: {new_features}")
     return new_features
+
+
+def evaluate_model(
+    model: Skorecard,
+    x_train: pd.DataFrame,
+    y_train: pd.Series,
+    x_test: pd.DataFrame,
+    y_test: pd.Series,
+) -> pd.DataFrame:
+    """
+    Calculates the AUC score, gini coefficient, and the AUC-ROC curve for the model.
+    """
+
+    proba_train = model.predict_proba(x_train)
+    proba_test = model.predict_proba(x_test)
+
+    auc_train = roc_auc_score(y_train, proba_train[:, 1])
+    auc_test = roc_auc_score(y_test, proba_test[:, 1])
+
+    gini_train = 2 * auc_train - 1
+    gini_test = 2 * auc_test - 1
+
+    logger.info(f"Train AUC: {auc_train:.4f}")
+    logger.info(f"Test AUC: {auc_test:.4f}")
+    logger.info(f"Train Gini: {gini_train:.4f}")
+    logger.info(f"Test Gini: {gini_test:.4f}")
+
+    y_pred_train = model.predict(x_train)
+    y_pred_test = model.predict(x_test)
+
+    logger.info("Train Classification Report:")
+    logger.info(classification_report(y_train, y_pred_train))
+    logger.info("Test Classification Report:")
+    logger.info(classification_report(y_test, y_pred_test))
+
+    metrics_df = pd.DataFrame(
+        {
+            "train_auc": [auc_train],
+            "test_auc": [auc_test],
+            "train_gini": [gini_train],
+            "test_gini": [gini_test],
+        }
+    )
+
+    return metrics_df
