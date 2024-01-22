@@ -8,6 +8,7 @@ from skorecard import Skorecard
 from skorecard.bucketers import DecisionTreeBucketer, OptimalBucketer, OrdinalCategoricalBucketer
 from skorecard.pipeline import BucketingProcess
 from skorecard.preprocessing import WoeEncoder
+from skorecard.rescale import ScoreCardPoints
 
 from kedro_credit_risk.pipelines.data_processing.aggregations import (
     _aggregate_features_bureau,
@@ -126,14 +127,14 @@ def aggregate_feature_engineering(  # noqa: PLR0913
 def fit_bucketing_pipeline(
     x_train: pd.DataFrame,
     y_train: str,
+    # prebucketing_params: dict[str, Any],
+    # bucketing_params: dict[str, Any],
 ) -> pd.DataFrame:
-    # TODO: Set the bucketing process parameters in the config files
-
     numerical_cols = x_train.select_dtypes(include=["int64", "float64"]).columns.tolist()
     categorical_cols = x_train.select_dtypes(include=["object", "category"]).columns.tolist()
 
     prebucketing_pipeline = make_pipeline(
-        DecisionTreeBucketer(variables=numerical_cols, max_n_bins=40, min_bin_size=0.02),
+        DecisionTreeBucketer(variables=numerical_cols, max_n_bins=40, min_bin_size=0.001),
         OrdinalCategoricalBucketer(variables=categorical_cols, tol=0.02),
     )
 
@@ -304,7 +305,7 @@ def evaluate_model(
     logger.info("Test Classification Report:")
     logger.info(classification_report(y_test, y_pred_test))
 
-    metrics_df = pd.DataFrame(
+    return pd.DataFrame(
         {
             "train_auc": [auc_train],
             "test_auc": [auc_test],
@@ -313,4 +314,26 @@ def evaluate_model(
         }
     )
 
-    return metrics_df
+
+def create_skorecard_points_df(model: Skorecard, pdo: int, ref_score: int, ref_odds: int) -> pd.DataFrame:
+    """
+    Creates the scorecard points table.
+
+    Args:
+        model: The trained Skorecard model.
+        pdo: The points to double the odds.
+        ref_score: The reference score.
+        ref_odds: The reference odds.
+
+    Returns:
+        The scorecard points table.
+    """
+    points_table = ScoreCardPoints(
+        skorecard_model=model,
+        pdo=pdo,
+        ref_score=ref_score,
+        ref_odds=ref_odds,
+    )
+    scorecard_points = points_table.get_scorecard_points()
+    logger.info(scorecard_points)
+    return scorecard_points
