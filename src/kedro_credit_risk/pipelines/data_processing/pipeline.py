@@ -2,6 +2,7 @@ from kedro.pipeline import Pipeline, node
 
 from .nodes import (
     aggregate_feature_engineering,
+    create_skorecard_points_df,
     evaluate_model,
     extract_bucket_process_summary,
     filter_application_data,
@@ -128,6 +129,17 @@ def create_pipeline(**kwargs) -> Pipeline:
                 ],
                 outputs="evaluation_metrics",
                 name="evaluate_model_node",
+            ),
+            node(
+                func=create_skorecard_points_df,
+                inputs=[
+                    "skorecard_model_final",
+                    "params:pdo",
+                    "params:ref_score",
+                    "params:ref_odds",
+                ],
+                outputs="skorecard_points_table",
+                name="create_skorecard_points_df_node",
             ),
         ]
     )
