@@ -91,6 +91,10 @@ bucketing_process:
   type: pickle.PickleDataset
   filepath: data/06_models/bucketing_process.pkl
 
+x_train_aggregate:
+  type: pandas.ParquetDataset
+  filepath: data/03_primary/x_train_aggregate.parquet
+
 # The train applications with the bucketing process applied
 # before the WoE transformation is applied
 x_train_bins:
@@ -152,3 +156,7 @@ skorecard_model_final:
 evaluation_metrics:
   type: pandas.CSVDataset
   filepath: data/08_reporting/evaluation_metrics.csv
+
+skorecard_points_table:
+  type: pandas.CSVDataset
+  filepath: data/08_reporting/skorecard_points_table.csv
