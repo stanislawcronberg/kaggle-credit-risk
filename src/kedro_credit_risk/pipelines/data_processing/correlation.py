@@ -10,9 +10,9 @@ def select_uncorrelated_features(corr_matrix: pd.DataFrame, corr_limit: float) -
     Filter out features that are highly correlated with each other.
 
     Args:
-        corr_matrix (pd.DataFrame): The correlation matrix of the features.
-        preselected_features (list): List of features to consider for filtering.
-        corr_limit (float): The threshold for correlation. Features with a correlation above this limit will be filtered out.
+        corr_matrix: The correlation matrix of the features.
+        preselected_features: List of features to consider for filtering.
+        corr_limit: The threshold for correlation. Features with a correlation above this limit will be filtered out.
 
     Returns:
         list: The list of filtered features.
