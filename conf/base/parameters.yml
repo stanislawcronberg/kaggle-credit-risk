@@ -2,6 +2,9 @@ test_size: 0.2
 random_state: 42
 target_column_name: "TARGET"
 iv_threshold: 0.05
-sample_size: 1
+sample_size: 0.5
 corr_limit: 0.6
 p_value_threshold: 0.05
+pdo: 20  # Points to Double the Odds
+ref_score: 100  # Reference Score
+ref_odds: 1  # Reference Odds
