@@ -32,10 +32,9 @@ def create_pipeline(**kwargs) -> Pipeline:
                 func=transform_with_bucketing_process,
                 inputs=[
                     "x_train_aggregate",
-                    "x_test_aggregate",
                     "bucketing_process",
                 ],
-                outputs=["x_train_bins", "x_test_bins"],
+                outputs="x_train_bins",
                 name="transform_with_bucketing_process_node",
             ),
             node(
@@ -48,11 +47,10 @@ def create_pipeline(**kwargs) -> Pipeline:
                 func=filter_application_data,
                 inputs=[
                     "x_train_bins",
-                    "x_test_bins",
                     "bucket_process_summary",
                     "params:iv_threshold",
                 ],
-                outputs=["x_train_bins_filtered", "x_test_bins_filtered"],
+                outputs="x_train_bins_filtered",
                 name="filter_with_information_value_node",
             ),
             node(
@@ -63,8 +61,8 @@ def create_pipeline(**kwargs) -> Pipeline:
             ),
             node(
                 func=transform_with_woe_encoder,
-                inputs=["x_train_bins_filtered", "x_test_bins_filtered", "woe_encoder"],
-                outputs=["x_train_woe", "x_test_woe"],
+                inputs=["x_train_bins_filtered", "woe_encoder"],
+                outputs="x_train_woe",
                 name="transform_with_woe_encoder_node",
             ),
             node(
