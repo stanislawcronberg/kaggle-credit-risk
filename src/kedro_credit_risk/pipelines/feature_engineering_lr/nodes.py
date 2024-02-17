@@ -21,8 +21,6 @@ logger = logging.getLogger(__name__)
 def fit_bucketing_pipeline(
     x_train: pd.DataFrame,
     y_train: str,
-    # prebucketing_params: dict[str, Any],
-    # bucketing_params: dict[str, Any],
 ) -> pd.DataFrame:
     numerical_cols = x_train.select_dtypes(include=["int64", "float64"]).columns.tolist()
     categorical_cols = x_train.select_dtypes(include=["object", "category"]).columns.tolist()
@@ -49,14 +47,11 @@ def fit_bucketing_pipeline(
 
 def transform_with_bucketing_process(
     x_train: pd.DataFrame,
-    x_test: pd.DataFrame,
     bucketing_process: BucketingProcess,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     x_train_bins = bucketing_process.transform(x_train)
-    x_test_bins = bucketing_process.transform(x_test)
     logger.debug(f"x_train_bins shape: {x_train_bins.shape}")
-    logger.debug(f"x_test_bins  shape: {x_test_bins.shape}")
-    return x_train_bins, x_test_bins
+    return x_train_bins
 
 
 def extract_bucket_process_summary(bucketing_process: BucketingProcess) -> pd.DataFrame:
@@ -66,17 +61,14 @@ def extract_bucket_process_summary(bucketing_process: BucketingProcess) -> pd.Da
 
 def filter_application_data(
     x_train: pd.DataFrame,
-    x_test: pd.DataFrame,
     bucket_summary: pd.DataFrame,
     iv_threshold: float,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     selected_features = bucket_summary[bucket_summary["IV_score"] > iv_threshold]["column"].tolist()
     x_train = x_train[selected_features]
-    x_test = x_test[selected_features]
     logger.info(f"Selected {len(selected_features)} features with IV score > {iv_threshold}")
     logger.debug(f"x_train shape: {x_train.shape}")
-    logger.debug(f"x_test  shape: {x_test.shape}")
-    return x_train, x_test
+    return x_train
 
 
 def fit_woe_encoder(
@@ -92,12 +84,10 @@ def fit_woe_encoder(
 
 def transform_with_woe_encoder(
     x_train_bins: pd.DataFrame,
-    x_test_bins: pd.DataFrame,
     encoder: WoeEncoder,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     x_train_woe = encoder.transform(x_train_bins)
-    x_test_woe = encoder.transform(x_test_bins)
-    return x_train_woe, x_test_woe
+    return x_train_woe
 
 
 def remove_correlated_features(
