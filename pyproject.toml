@@ -30,6 +30,7 @@ skorecard = "~1.6.8"
 jupyterlab = ">=3.0"
 kedro-viz = "^7.0.0"
 kedro-datasets = "^2.0.0"
+optuna = "^3.5.0"
 
 [tool.poetry.extras]
 docs = ["docutils", "sphinx", "sphinx_rtd_theme", "nbsphinx", "sphinx-autodoc-typehints", "sphinx_copybutton", "ipykernel", "Jinja2", "myst-parser"]
