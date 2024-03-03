@@ -11,6 +11,6 @@ class ProjectHooks:
         # which spams the logs and is not relevant.
         warnings.filterwarnings("ignore", category=FutureWarning, module="skorecard")
 
-        # Optbinning complains about invalue values encountered in the casting of data
+        # Optbinning complains about invalid values encountered in the casting of data
         # which also appears to not be relevant.
         warnings.filterwarnings("ignore", category=RuntimeWarning, module="optbinning")

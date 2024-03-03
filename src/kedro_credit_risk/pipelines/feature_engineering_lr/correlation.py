@@ -28,7 +28,6 @@ def select_uncorrelated_features(corr_matrix: pd.DataFrame, corr_limit: float) -
         if len(remaining_features) == 0:
             continue
 
-        # find the correlated features with the remaining preselected features
         corr_feats = corr_matrix.loc[remaining_features, feature].abs()
         drop_at_step = corr_feats[corr_feats > corr_limit].index.tolist()
         drop_feats += drop_at_step
